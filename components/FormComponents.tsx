@@ -181,3 +181,69 @@ export const SuccessMessage: React.FC<{ message: string; onReset: () => void }> 
     </div>
   </div>
 );
+
+interface DataTableProps {
+  columns: { key: string; label: string }[];
+  data: any[];
+}
+
+export const DataTable: React.FC<DataTableProps> = ({ columns, data }) => (
+  <div className="overflow-x-auto custom-scrollbar border border-slate-200 rounded-xl bg-white shadow-sm">
+    <table className="w-full text-left border-collapse">
+      <thead>
+        <tr className="border-b border-slate-200 bg-slate-50">
+          {columns.map(col => (
+            <th key={col.key} className="px-4 py-4 text-[10px] font-black text-slate-500 uppercase tracking-widest whitespace-nowrap">
+              {col.label}
+            </th>
+          ))}
+        </tr>
+      </thead>
+      <tbody>
+        {data.length > 0 ? (
+          data.map((row, i) => (
+            <tr 
+              key={i} 
+              className={`border-b border-slate-100 transition-colors hover:bg-cyan-50/30 ${
+                i % 2 === 0 ? 'bg-white' : 'bg-slate-50/30'
+              }`}
+            >
+              {columns.map(col => (
+                <td key={col.key} className="px-4 py-3.5 text-[13px] font-medium text-slate-600 whitespace-nowrap">
+                  {row[col.key] || '-'}
+                </td>
+              ))}
+            </tr>
+          ))
+        ) : (
+          <tr>
+            <td colSpan={columns.length} className="px-4 py-16 text-center text-slate-400 italic text-sm">
+              <div className="flex flex-col items-center space-y-2">
+                <i className="fa-solid fa-inbox text-3xl opacity-20"></i>
+                <span>Nenhum registro encontrado...</span>
+              </div>
+            </td>
+          </tr>
+        )}
+      </tbody>
+    </table>
+  </div>
+);
+
+export const FilterSelect: React.FC<SelectProps> = ({ label, options, ...props }) => (
+  <div className="space-y-1 group min-w-[140px]">
+    <label className="block text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1 group-focus-within:text-cyan-600 transition-colors">{label}</label>
+    <div className="relative">
+      <select 
+        {...props}
+        className="w-full pl-3 pr-8 py-1.5 bg-slate-50 border border-slate-200 rounded-lg focus:ring-4 focus:ring-cyan-500/10 focus:border-cyan-500 outline-none transition-all duration-200 text-slate-700 text-[12px] font-bold appearance-none cursor-pointer hover:border-slate-300"
+      >
+        <option value="">Todos</option>
+        {options.map(opt => <option key={opt.value} value={opt.value}>{opt.label}</option>)}
+      </select>
+      <div className="absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">
+        <i className="fa-solid fa-filter text-[9px]"></i>
+      </div>
+    </div>
+  </div>
+);

@@ -9,7 +9,8 @@ export const DEPARTMENTS: Department[] = [
     description: 'Registro formal de interações e demandas',
     colorClass: 'bg-indigo-600',
     submodules: [
-      { id: 'service_record', name: 'Registro de atendimento', parentId: 'service_record' }
+      { id: 'service_record', name: 'Registrar atendimento', parentId: 'service_record' },
+      { id: 'service_consult', name: 'Consultar atendimentos', parentId: 'service_record' }
     ]
   },
   { 

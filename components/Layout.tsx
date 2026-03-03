@@ -69,20 +69,10 @@ const Layout: React.FC<LayoutProps> = ({ children, activeDept, activeSubmodule, 
             <i className="fa-solid fa-house-chimney text-lg"></i>
             {!isCollapsed && <span className="font-bold text-sm">Página Inicial</span>}
           </button>
-
-          <button 
-            onClick={() => { onNavigate('service_record', 'service_record'); setExpandedDept(null); }}
-            className={`w-full flex items-center rounded-xl px-4 py-3.5 transition-all ${
-              activeDept === 'service_record' ? 'sidebar-item-active text-white' : 'text-slate-400 hover:bg-white/5'
-            } ${isCollapsed ? 'justify-center' : 'space-x-3'}`}
-          >
-            <i className="fa-solid fa-headset text-lg"></i>
-            {!isCollapsed && <span className="font-bold text-sm">Registro de Atendimento</span>}
-          </button>
           
           {!isCollapsed && <div className="pt-6 pb-2 px-4 text-[10px] font-black text-slate-500 uppercase tracking-widest">Departamentos</div>}
           
-          {DEPARTMENTS.filter(d => d.id !== 'service_record').map((dept) => {
+          {DEPARTMENTS.map((dept) => {
             const isExpanded = expandedDept === dept.id;
             const isActive = activeDept === dept.id;
 
@@ -143,10 +133,7 @@ const Layout: React.FC<LayoutProps> = ({ children, activeDept, activeSubmodule, 
              <button onClick={() => { onNavigate('home', null); setIsMobileMenuOpen(false); }} className={`w-full text-left text-white px-5 py-4 rounded-xl font-bold flex items-center space-x-3 ${activeDept === 'home' ? 'bg-cyan-600' : 'bg-white/5'}`}>
                <i className="fa-solid fa-house"></i><span>Início</span>
              </button>
-             <button onClick={() => { onNavigate('service_record', 'service_record'); setIsMobileMenuOpen(false); }} className={`w-full text-left text-white px-5 py-4 rounded-xl font-bold flex items-center space-x-3 ${activeDept === 'service_record' ? 'bg-cyan-600' : 'bg-white/5'}`}>
-               <i className="fa-solid fa-headset"></i><span>Registro de Atendimento</span>
-             </button>
-             {DEPARTMENTS.filter(d => d.id !== 'service_record').map(dept => (
+             {DEPARTMENTS.map(dept => (
                <div key={dept.id} className="space-y-2">
                  <div className="px-4 text-[10px] font-black text-cyan-500 uppercase tracking-widest">{dept.name}</div>
                  {dept.submodules.map(sub => (

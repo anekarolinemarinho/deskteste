@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import Layout from './components/Layout';
 import { DepartmentId, FormSubmissionStatus, Submodule } from './types';
 import { DEPARTMENTS } from './constants';
-import { Input, Select, TextArea, FormCard, SuccessMessage, FormMirror } from './components/FormComponents';
+import { Input, Select, TextArea, FormCard, SuccessMessage, FormMirror, DataTable, FilterSelect } from './components/FormComponents';
 
 const App: React.FC = () => {
   const [activeDept, setActiveDept] = useState<DepartmentId>('home');
@@ -11,6 +11,21 @@ const App: React.FC = () => {
   const [status, setStatus] = useState<FormSubmissionStatus>({ submitting: false, success: null, error: null });
   const [formData, setFormData] = useState<Record<string, string>>({});
   const [demandSearch, setDemandSearch] = useState('');
+  const [consultSearch, setConsultSearch] = useState('');
+  const [filters, setFilters] = useState<Record<string, string>>({
+    Categoria: '',
+    Canal: '',
+    Tipo: '',
+    Status: ''
+  });
+
+  const mockServiceRecords = [
+    { Protocolo: '2024001', Associado: 'João Silva', Placa: 'ABC-1234', Tipo_Registro: 'Receptivo', Canal_Entrada: 'WhatsApp', Categoria_Demanda: 'Informação', Subcategoria_Demanda: 'Solicitação de contrato', Status_Atendimento: 'Atendimento concluído' },
+    { Protocolo: '2024002', Associado: 'Maria Oliveira', Placa: 'XYZ-9876', Tipo_Registro: 'Ativo', Canal_Entrada: 'Telefone', Categoria_Demanda: 'Financeiro', Subcategoria_Demanda: 'Boleto com valor errado', Status_Atendimento: 'Atendimento concluído' },
+    { Protocolo: '2024003', Associado: 'Pedro Santos', Placa: 'KJH-4455', Tipo_Registro: 'Receptivo', Canal_Entrada: 'Email', Categoria_Demanda: 'Reclamação', Subcategoria_Demanda: 'Demora no atendimento', Status_Atendimento: 'Atendimento transferido' },
+    { Protocolo: '2024004', Associado: 'Ana Costa', Placa: 'LMN-0011', Tipo_Registro: 'Ativo', Canal_Entrada: 'WhatsApp', Categoria_Demanda: 'Rastreamento', Subcategoria_Demanda: 'Solicitação de login', Status_Atendimento: 'Atendimento concluído' },
+    { Protocolo: '2024005', Associado: 'Carlos Souza', Placa: 'OPQ-2233', Tipo_Registro: 'Receptivo', Canal_Entrada: 'Telefone', Categoria_Demanda: 'Eventos', Subcategoria_Demanda: 'Abertura de Evento', Status_Atendimento: 'Atendimento concluído' },
+  ];
 
   const demandHierarchy = [
     { cat: 'Informação', subs: ['Solicitação de contrato', 'Cobertura contratada', 'Dúvidas sobre número de contato da BR Clube', 'Dúvidas sobre rateio'] },
@@ -49,6 +64,13 @@ const App: React.FC = () => {
     setActiveSubmodule(submoduleId);
     setStatus({ submitting: false, success: null, error: null });
     setFormData({});
+    setConsultSearch('');
+    setFilters({
+      Categoria: '',
+      Canal: '',
+      Tipo: '',
+      Status: ''
+    });
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
@@ -231,6 +253,100 @@ const App: React.FC = () => {
 
   const getFormContent = () => {
     switch(activeSubmodule) {
+      case 'service_consult':
+        const filteredRecords = mockServiceRecords.filter(r => {
+          const searchMatch = !consultSearch || 
+            r.Associado.toLowerCase().includes(consultSearch.toLowerCase()) ||
+            r.Placa.toLowerCase().includes(consultSearch.toLowerCase()) ||
+            r.Protocolo.toLowerCase().includes(consultSearch.toLowerCase());
+          
+          const catMatch = !filters.Categoria || r.Categoria_Demanda === filters.Categoria;
+          const canalMatch = !filters.Canal || r.Canal_Entrada === filters.Canal;
+          const tipoMatch = !filters.Tipo || r.Tipo_Registro === filters.Tipo;
+          const statusMatch = !filters.Status || r.Status_Atendimento === filters.Status;
+
+          return searchMatch && catMatch && canalMatch && tipoMatch && statusMatch;
+        });
+
+        return (
+          <div className="space-y-6">
+            <div className="bg-slate-50/50 p-5 rounded-2xl border border-slate-100 flex flex-col lg:flex-row gap-5 items-end">
+              <div className="flex-1 w-full">
+                <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 mb-1.5">Busca por Termo</label>
+                <div className="relative">
+                  <input 
+                    type="text"
+                    placeholder="Nome, placa ou protocolo..."
+                    value={consultSearch}
+                    onChange={(e) => setConsultSearch(e.target.value)}
+                    className="w-full px-4 py-2 bg-white border border-slate-200 rounded-xl focus:ring-4 focus:ring-cyan-500/10 focus:border-cyan-500 outline-none transition-all text-[13px] font-medium shadow-sm"
+                  />
+                  <div className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-300">
+                    <i className="fa-solid fa-magnifying-glass text-xs"></i>
+                  </div>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 w-full lg:w-auto">
+                <FilterSelect 
+                  label="Categoria" 
+                  value={filters.Categoria} 
+                  onChange={(e) => setFilters({...filters, Categoria: e.target.value})}
+                  options={[
+                    {value: 'Informação', label: 'Informação'},
+                    {value: 'Financeiro', label: 'Financeiro'},
+                    {value: 'Reclamação', label: 'Reclamação'},
+                    {value: 'Eventos', label: 'Eventos'},
+                    {value: 'Rastreamento', label: 'Rastreamento'}
+                  ]} 
+                />
+                <FilterSelect 
+                  label="Canal" 
+                  value={filters.Canal} 
+                  onChange={(e) => setFilters({...filters, Canal: e.target.value})}
+                  options={[
+                    {value: 'WhatsApp', label: 'WhatsApp'},
+                    {value: 'Telefone', label: 'Telefone'},
+                    {value: 'Email', label: 'Email'}
+                  ]} 
+                />
+                <FilterSelect 
+                  label="Tipo" 
+                  value={filters.Tipo} 
+                  onChange={(e) => setFilters({...filters, Tipo: e.target.value})}
+                  options={[
+                    {value: 'Receptivo', label: 'Receptivo'},
+                    {value: 'Ativo', label: 'Ativo'}
+                  ]} 
+                />
+                <FilterSelect 
+                  label="Status" 
+                  value={filters.Status} 
+                  onChange={(e) => setFilters({...filters, Status: e.target.value})}
+                  options={[
+                    {value: 'Atendimento concluído', label: 'Concluído'},
+                    {value: 'Atendimento transferido', label: 'Transferido'}
+                  ]} 
+                />
+              </div>
+            </div>
+
+            <DataTable 
+              columns={[
+                { key: 'Protocolo', label: 'Protocolo' },
+                { key: 'Associado', label: 'Associado' },
+                { key: 'Placa', label: 'Placa' },
+                { key: 'Tipo_Registro', label: 'Tipo' },
+                { key: 'Canal_Entrada', label: 'Canal' },
+                { key: 'Categoria_Demanda', label: 'Categoria' },
+                { key: 'Subcategoria_Demanda', label: 'Subcategoria' },
+                { key: 'Status_Atendimento', label: 'Status' },
+              ]}
+              data={filteredRecords}
+            />
+          </div>
+        );
+
       case 'service_record':
         return (
           <form onSubmit={simulateSubmit} className="grid grid-cols-1 md:grid-cols-3 gap-x-5 gap-y-4">
@@ -454,21 +570,55 @@ const App: React.FC = () => {
         renderDepartmentOverview()
       ) : (
         <div className="space-y-8 animate-in fade-in duration-700">
-          <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
-            <div className="flex items-center space-x-5">
-              <button onClick={() => handleNavigate(activeDept, null)} className="w-12 h-12 rounded-2xl bg-white border border-slate-200 flex items-center justify-center text-slate-400 hover:text-cyan-600 shadow-sm transition-all hover:shadow-xl">
-                <i className="fa-solid fa-arrow-left text-base"></i>
-              </button>
-              <div>
-                <nav className="flex items-center space-x-3 text-[10px] font-black uppercase tracking-[0.4em] text-slate-400 mb-1">
-                   <span>{currentDeptObj?.name}</span>
-                   <i className="fa-solid fa-chevron-right text-[7px] opacity-30"></i>
-                   <span className="text-cyan-500 font-black">Editor de Dados</span>
-                </nav>
-                <h1 className="text-3xl font-[1000] text-slate-900 tracking-tight">{currentSub?.name}</h1>
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+              <div className="flex items-center space-x-5">
+                <button onClick={() => handleNavigate(activeDept, null)} className="w-12 h-12 rounded-2xl bg-white border border-slate-200 flex items-center justify-center text-slate-400 hover:text-cyan-600 shadow-sm transition-all hover:shadow-xl">
+                  <i className="fa-solid fa-arrow-left text-base"></i>
+                </button>
+                <div>
+                  <nav className="flex items-center space-x-3 text-[10px] font-black uppercase tracking-[0.4em] text-slate-400 mb-1">
+                     <span>{currentDeptObj?.name}</span>
+                     <i className="fa-solid fa-chevron-right text-[7px] opacity-30"></i>
+                     <span className="text-cyan-500 font-black">Editor de Dados</span>
+                  </nav>
+                  <h1 className="text-3xl font-[1000] text-slate-900 tracking-tight">{currentSub?.name}</h1>
+                </div>
               </div>
+
+              {activeSubmodule === 'service_record' && (
+                <div className="flex bg-slate-100 p-1 rounded-xl">
+                  <button 
+                    onClick={() => handleNavigate('service_record', 'service_record')}
+                    className={`px-6 py-2 rounded-lg text-xs font-bold uppercase tracking-widest transition-all ${activeSubmodule === 'service_record' ? 'bg-white text-cyan-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
+                  >
+                    Registrar
+                  </button>
+                  <button 
+                    onClick={() => handleNavigate('service_record', 'service_consult')}
+                    className={`px-6 py-2 rounded-lg text-xs font-bold uppercase tracking-widest transition-all ${activeSubmodule === 'service_consult' ? 'bg-white text-cyan-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
+                  >
+                    Consultar
+                  </button>
+                </div>
+              )}
+
+              {activeSubmodule === 'service_consult' && (
+                <div className="flex bg-slate-100 p-1 rounded-xl">
+                  <button 
+                    onClick={() => handleNavigate('service_record', 'service_record')}
+                    className={`px-6 py-2 rounded-lg text-xs font-bold uppercase tracking-widest transition-all ${activeSubmodule === 'service_record' ? 'bg-white text-cyan-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
+                  >
+                    Registrar
+                  </button>
+                  <button 
+                    onClick={() => handleNavigate('service_record', 'service_consult')}
+                    className={`px-6 py-2 rounded-lg text-xs font-bold uppercase tracking-widest transition-all ${activeSubmodule === 'service_consult' ? 'bg-white text-cyan-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
+                  >
+                    Consultar
+                  </button>
+                </div>
+              )}
             </div>
-          </div>
           
           {status.success ? (
             <div className="py-12">
@@ -479,14 +629,16 @@ const App: React.FC = () => {
             </div>
           ) : (
             <div className="grid grid-cols-1 xl:grid-cols-12 gap-8 items-start">
-              <div className="xl:col-span-8 2xl:col-span-9">
-                <FormCard title={currentSub?.name || ''} icon={currentDeptObj?.icon || 'fa-file'}>
+              <div className={activeSubmodule === 'service_consult' ? "xl:col-span-12" : "xl:col-span-8 2xl:col-span-9"}>
+                <FormCard title={activeSubmodule === 'service_consult' ? 'Consulta de Atendimentos' : (currentSub?.name || '')} icon={currentDeptObj?.icon || 'fa-file'}>
                   {getFormContent()}
                 </FormCard>
               </div>
-              <div className="xl:col-span-4 2xl:col-span-3">
-                <FormMirror data={formData} title={currentSub?.name || ''} generateMessage={generateCopyMessage} />
-              </div>
+              {activeSubmodule !== 'service_consult' && (
+                <div className="xl:col-span-4 2xl:col-span-3">
+                  <FormMirror data={formData} title={currentSub?.name || ''} generateMessage={generateCopyMessage} />
+                </div>
+              )}
             </div>
           )}
         </div>
