@@ -185,9 +185,10 @@ export const SuccessMessage: React.FC<{ message: string; onReset: () => void }> 
 interface DataTableProps {
   columns: { key: string; label: string }[];
   data: any[];
+  onRowClick?: (row: any) => void;
 }
 
-export const DataTable: React.FC<DataTableProps> = ({ columns, data }) => (
+export const DataTable: React.FC<DataTableProps> = ({ columns, data, onRowClick }) => (
   <div className="overflow-x-auto custom-scrollbar border border-slate-200 rounded-xl bg-white shadow-sm">
     <table className="w-full text-left border-collapse">
       <thead>
@@ -204,9 +205,10 @@ export const DataTable: React.FC<DataTableProps> = ({ columns, data }) => (
           data.map((row, i) => (
             <tr 
               key={i} 
+              onClick={() => onRowClick?.(row)}
               className={`border-b border-slate-100 transition-colors hover:bg-cyan-50/30 ${
                 i % 2 === 0 ? 'bg-white' : 'bg-slate-50/30'
-              }`}
+              } ${onRowClick ? 'cursor-pointer' : ''}`}
             >
               {columns.map(col => (
                 <td key={col.key} className="px-4 py-3.5 text-[13px] font-medium text-slate-600 whitespace-nowrap">

@@ -12,6 +12,7 @@ const App: React.FC = () => {
   const [formData, setFormData] = useState<Record<string, string>>({});
   const [demandSearch, setDemandSearch] = useState('');
   const [consultSearch, setConsultSearch] = useState('');
+  const [selectedRecord, setSelectedRecord] = useState<any | null>(null);
   const [filters, setFilters] = useState<Record<string, string>>({
     Categoria: '',
     Canal: '',
@@ -20,11 +21,11 @@ const App: React.FC = () => {
   });
 
   const mockServiceRecords = [
-    { Protocolo: '2024001', Associado: 'João Silva', Placa: 'ABC-1234', Tipo_Registro: 'Receptivo', Canal_Entrada: 'WhatsApp', Categoria_Demanda: 'Informação', Subcategoria_Demanda: 'Solicitação de contrato', Status_Atendimento: 'Atendimento concluído' },
-    { Protocolo: '2024002', Associado: 'Maria Oliveira', Placa: 'XYZ-9876', Tipo_Registro: 'Ativo', Canal_Entrada: 'Telefone', Categoria_Demanda: 'Financeiro', Subcategoria_Demanda: 'Boleto com valor errado', Status_Atendimento: 'Atendimento concluído' },
-    { Protocolo: '2024003', Associado: 'Pedro Santos', Placa: 'KJH-4455', Tipo_Registro: 'Receptivo', Canal_Entrada: 'Email', Categoria_Demanda: 'Reclamação', Subcategoria_Demanda: 'Demora no atendimento', Status_Atendimento: 'Atendimento transferido' },
-    { Protocolo: '2024004', Associado: 'Ana Costa', Placa: 'LMN-0011', Tipo_Registro: 'Ativo', Canal_Entrada: 'WhatsApp', Categoria_Demanda: 'Rastreamento', Subcategoria_Demanda: 'Solicitação de login', Status_Atendimento: 'Atendimento concluído' },
-    { Protocolo: '2024005', Associado: 'Carlos Souza', Placa: 'OPQ-2233', Tipo_Registro: 'Receptivo', Canal_Entrada: 'Telefone', Categoria_Demanda: 'Eventos', Subcategoria_Demanda: 'Abertura de Evento', Status_Atendimento: 'Atendimento concluído' },
+    { Protocolo: '2024001', Associado: 'João Silva', Placa: 'ABC-1234', Tipo_Registro: 'Receptivo', Canal_Entrada: 'WhatsApp', Categoria_Demanda: 'Informação', Subcategoria_Demanda: 'Solicitação de contrato', Status_Atendimento: 'Atendimento concluído', Relato: 'Associado solicita cópia do contrato atualizado.', Providencias: 'Enviado via WhatsApp em PDF.', Percepcao_Satisfacao: 'Satisfeito', Pendencias_Futuras: 'Não', Motivo_Fechamento: 'Concluído', Tarefas_Space: 'Não se aplica' },
+    { Protocolo: '2024002', Associado: 'Maria Oliveira', Placa: 'XYZ-9876', Tipo_Registro: 'Ativo', Canal_Entrada: 'Telefone', Categoria_Demanda: 'Financeiro', Subcategoria_Demanda: 'Boleto com valor errado', Status_Atendimento: 'Atendimento concluído', Relato: 'Boleto veio com valor de rateio duplicado.', Providencias: 'Corrigido no sistema e reenviado novo boleto.', Percepcao_Satisfacao: 'Satisfeito', Pendencias_Futuras: 'Não', Motivo_Fechamento: 'Concluído', Tarefas_Space: 'Sim' },
+    { Protocolo: '2024003', Associado: 'Pedro Santos', Placa: 'KJH-4455', Tipo_Registro: 'Receptivo', Canal_Entrada: 'Email', Categoria_Demanda: 'Reclamação', Subcategoria_Demanda: 'Demora no atendimento', Status_Atendimento: 'Atendimento transferido', Relato: 'Reclamação sobre demora no guincho (2h de espera).', Providencias: 'Transferido para o setor de Qualidade para análise.', Percepcao_Satisfacao: 'Insatisfeito', Pendencias_Futuras: 'Sim', Prazo_Retorno: '2024-03-05T10:00', Motivo_Fechamento: 'Encaminhado', Tarefas_Space: 'Sim' },
+    { Protocolo: '2024004', Associado: 'Ana Costa', Placa: 'LMN-0011', Tipo_Registro: 'Ativo', Canal_Entrada: 'WhatsApp', Categoria_Demanda: 'Rastreamento', Subcategoria_Demanda: 'Solicitação de login', Status_Atendimento: 'Atendimento concluído', Relato: 'Associado esqueceu a senha do app.', Providencias: 'Reset de senha realizado e instruções enviadas.', Percepcao_Satisfacao: 'Satisfeito', Pendencias_Futuras: 'Não', Motivo_Fechamento: 'Concluído', Tarefas_Space: 'Não se aplica' },
+    { Protocolo: '2024005', Associado: 'Carlos Souza', Placa: 'OPQ-2233', Tipo_Registro: 'Receptivo', Canal_Entrada: 'Telefone', Categoria_Demanda: 'Eventos', Subcategoria_Demanda: 'Abertura de Evento', Status_Atendimento: 'Atendimento concluído', Relato: 'Colisão traseira sem vítimas.', Providencias: 'Abertura de evento realizada, documentos solicitados.', Percepcao_Satisfacao: 'Satisfeito (Aguarda Retorno)', Pendencias_Futuras: 'Sim', Prazo_Retorno: '2024-03-04T14:00', Motivo_Fechamento: 'Concluído', Tarefas_Space: 'Sim' },
   ];
 
   const demandHierarchy = [
@@ -65,6 +66,7 @@ const App: React.FC = () => {
     setStatus({ submitting: false, success: null, error: null });
     setFormData({});
     setConsultSearch('');
+    setSelectedRecord(null);
     setFilters({
       Categoria: '',
       Canal: '',
@@ -254,6 +256,118 @@ const App: React.FC = () => {
   const getFormContent = () => {
     switch(activeSubmodule) {
       case 'service_consult':
+        if (selectedRecord) {
+          return (
+            <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+              <div className="flex items-center justify-between border-b border-slate-100 pb-4">
+                <button 
+                  onClick={() => setSelectedRecord(null)}
+                  className="flex items-center space-x-2 text-slate-400 hover:text-cyan-600 transition-colors group"
+                >
+                  <i className="fa-solid fa-arrow-left text-sm group-hover:-translate-x-1 transition-transform"></i>
+                  <span className="text-xs font-bold uppercase tracking-widest">Voltar para a lista</span>
+                </button>
+                <div className="flex items-center space-x-2">
+                  <span className="text-[10px] font-black text-slate-300 uppercase tracking-widest">Protocolo</span>
+                  <span className="bg-slate-100 px-3 py-1 rounded-full text-xs font-black text-slate-600">{selectedRecord.Protocolo}</span>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <div className="md:col-span-2 space-y-8">
+                  <section>
+                    <h3 className="text-[11px] font-black text-cyan-600 uppercase tracking-[0.2em] mb-4 flex items-center">
+                      <i className="fa-solid fa-user-gear mr-2"></i> Dados do Atendimento
+                    </h3>
+                    <div className="grid grid-cols-2 gap-6 bg-slate-50/50 p-6 rounded-2xl border border-slate-100">
+                      <div>
+                        <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Associado</p>
+                        <p className="text-sm font-bold text-slate-800">{selectedRecord.Associado}</p>
+                      </div>
+                      <div>
+                        <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Placa</p>
+                        <p className="text-sm font-bold text-slate-800">{selectedRecord.Placa}</p>
+                      </div>
+                      <div>
+                        <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Tipo de Registro</p>
+                        <p className="text-sm font-bold text-slate-800">{selectedRecord.Tipo_Registro}</p>
+                      </div>
+                      <div>
+                        <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Canal de Entrada</p>
+                        <p className="text-sm font-bold text-slate-800">{selectedRecord.Canal_Entrada}</p>
+                      </div>
+                    </div>
+                  </section>
+
+                  <section>
+                    <h3 className="text-[11px] font-black text-cyan-600 uppercase tracking-[0.2em] mb-4 flex items-center">
+                      <i className="fa-solid fa-file-lines mr-2"></i> Detalhes da Demanda
+                    </h3>
+                    <div className="space-y-4 bg-slate-50/50 p-6 rounded-2xl border border-slate-100">
+                      <div className="grid grid-cols-2 gap-6">
+                        <div>
+                          <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Categoria</p>
+                          <p className="text-sm font-bold text-slate-800">{selectedRecord.Categoria_Demanda}</p>
+                        </div>
+                        <div>
+                          <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Subcategoria</p>
+                          <p className="text-sm font-bold text-slate-800">{selectedRecord.Subcategoria_Demanda}</p>
+                        </div>
+                      </div>
+                      <div className="pt-4 border-t border-slate-100">
+                        <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Relato</p>
+                        <p className="text-sm font-medium text-slate-600 leading-relaxed">{selectedRecord.Relato}</p>
+                      </div>
+                      <div className="pt-4 border-t border-slate-100">
+                        <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Providências</p>
+                        <p className="text-sm font-medium text-slate-600 leading-relaxed">{selectedRecord.Providencias}</p>
+                      </div>
+                    </div>
+                  </section>
+                </div>
+
+                <div className="space-y-8">
+                  <section>
+                    <h3 className="text-[11px] font-black text-cyan-600 uppercase tracking-[0.2em] mb-4 flex items-center">
+                      <i className="fa-solid fa-circle-check mr-2"></i> Status e Fechamento
+                    </h3>
+                    <div className="space-y-4 bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+                      <div>
+                        <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Status Final</p>
+                        <span className={`inline-block px-3 py-1 rounded-lg text-[10px] font-black uppercase tracking-widest ${
+                          selectedRecord.Status_Atendimento === 'Atendimento concluído' ? 'bg-green-100 text-green-700' : 'bg-amber-100 text-amber-700'
+                        }`}>
+                          {selectedRecord.Status_Atendimento}
+                        </span>
+                      </div>
+                      <div>
+                        <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Satisfação</p>
+                        <p className="text-sm font-bold text-slate-800">{selectedRecord.Percepcao_Satisfacao}</p>
+                      </div>
+                      <div>
+                        <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Pendências Futuras</p>
+                        <p className="text-sm font-bold text-slate-800">{selectedRecord.Pendencias_Futuras}</p>
+                      </div>
+                      {selectedRecord.Prazo_Retorno && (
+                        <div>
+                          <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Prazo de Retorno</p>
+                          <p className="text-sm font-bold text-red-600">
+                            {new Date(selectedRecord.Prazo_Retorno).toLocaleString('pt-BR')}
+                          </p>
+                        </div>
+                      )}
+                      <div>
+                        <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Tarefas Space</p>
+                        <p className="text-sm font-bold text-slate-800">{selectedRecord.Tarefas_Space}</p>
+                      </div>
+                    </div>
+                  </section>
+                </div>
+              </div>
+            </div>
+          );
+        }
+
         const filteredRecords = mockServiceRecords.filter(r => {
           const searchMatch = !consultSearch || 
             r.Associado.toLowerCase().includes(consultSearch.toLowerCase()) ||
@@ -343,6 +457,7 @@ const App: React.FC = () => {
                 { key: 'Status_Atendimento', label: 'Status' },
               ]}
               data={filteredRecords}
+              onRowClick={(row) => setSelectedRecord(row)}
             />
           </div>
         );
